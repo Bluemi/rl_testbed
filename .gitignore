@@ -1,1 +1,4 @@
 __pycache__
+/.idea
+/run.sh
+/log.txt
