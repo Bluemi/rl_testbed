@@ -2,17 +2,20 @@ import numpy as np
 from abc import ABC
 from typing import Callable, Tuple
 
-from n_armed_bandit import NArmedBandit
+from n_armed_bandit import Playable
 
 
 class Solver(ABC):
-    def __init__(self, n):
+    def __init__(self, name: str, n, initial_action_value: float = 0.0):
         """
         Creates a solver for a n armed bandit problem.
 
+        :param name: The optional name for this Solver. Can be used for identification.
         :param n: The number of actions to try
+        :param initial_action_value: The value every action value should start with
         """
-        self._action_values = np.zeros(n, dtype=np.float)
+        self._name = name
+        self._action_values = np.zeros(n, dtype=np.float) + initial_action_value
 
     def get_number_of_actions(self):
         return self._action_values.shape[0]
@@ -52,7 +55,7 @@ class Solver(ABC):
         """
         return np.random.randint(self.get_number_of_actions())
 
-    def play(self, bandit: NArmedBandit) -> Tuple[int, float]:
+    def play(self, bandit: Playable) -> Tuple[int, float]:
         """
         Chooses an action and tries it on the given n armed bandit. Afterwards applies the result to the action values.
 
@@ -64,30 +67,44 @@ class Solver(ABC):
         self._apply_action_reward(action, reward)
         return action, reward
 
+    def __str__(self):
+        return self._name
+
 
 class ActionUpdateSolver(Solver, ABC):
     """
     Implements the _choose_action function, to update the chosen action with the given update rule.
     """
-    def __init__(self, n: int, update_rule: Callable[[float, float, int], float]):
+    def __init__(
+            self,
+            name: str,
+            n: int,
+            update_rule: Callable[[float, float, int], float],
+            initial_action_value: float = 0.0
+    ):
         """
         Creates a new ActionUpdateSolver with the given update rule.
 
+        :param name: The name of this solver
         :param n: The number of actions
-        :type n: int
         :param update_rule: A callable of the form:
                             update_rule(current_action_value, reward, num_action_tries) -> new_action_value
 
                             - current_action_value is the current value of the chosen action
                             - reward is the reward achieved by choosing this action
                             - num_action_tries is the number, how often this action was tried before this play
+        :param initial_action_value: The value every action value should start with
         """
-        super().__init__(n)
+        super().__init__(
+            name=name,
+            n=n,
+            initial_action_value=initial_action_value
+        )
 
         self._number_action_tries = np.zeros(shape=n, dtype=np.int)
         self._update_rule = update_rule
 
-    def play(self, bandit: NArmedBandit) -> Tuple[int, float]:
+    def play(self, bandit: Playable) -> Tuple[int, float]:
         """
         Chooses an action and tries it on the given n armed bandit. Afterwards applies the result to the action values.
 
