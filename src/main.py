@@ -34,9 +34,7 @@ def main():
     solver_ranking = compare_once(bandit, solvers, NUM_PLAYS_PER_TRAINING)
 
     for solver, result in solver_ranking:
-        # print('')
-        print(solver)
-        # print(result)
+        print('{:<27}: {}'.format(str(solver), result.reward_sum))
 
 
 if __name__ == '__main__':
