@@ -1,7 +1,7 @@
 from typing import Callable
 import numpy as np
 
-from base_solver import ActionUpdateSolver
+from solvers.base_solver import ActionUpdateSolver
 from n_armed_bandit import Playable
 from update_rules import sample_average_update_rule
 

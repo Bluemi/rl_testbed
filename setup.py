@@ -9,5 +9,7 @@ setup(
     license='',
     author='alok',
     author_email='bruno.schilling@protonmail.ch',
-    description='A small test environment for reinforcement learning applications'
+    description='A small test environment for reinforcement learning applications', install_requires=['numpy',
+                                                                                                      'matplotlib',
+                                                                                                      'tqdm']
 )

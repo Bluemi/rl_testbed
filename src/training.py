@@ -8,19 +8,20 @@ from n_armed_bandit import NArmedBandit
 
 @total_ordering
 class TrainResult:
-    def __init__(self, bandit: NArmedBandit, solver: Solver, actions_selected: dict, sum_reward: float):
+    def __init__(self, bandit: NArmedBandit, solver: Solver, actions_selected: dict, rewards: List[float]):
         """
         Creates a new TrainResult.
 
         :param bandit: The bandit that was trained on
         :param solver: The solver that trained
         :param actions_selected: The actions which where selected during training
-        :param sum_reward: The sum of all rewards achieved during this training
+        :param rewards: A list containing all rewards gathered
         """
         self.bandit = bandit
         self.solver = solver
         self.actions_selected = actions_selected
-        self.reward_sum = sum_reward
+        self.rewards = rewards
+        self.reward_sum = sum(rewards)
 
     def __str__(self) -> str:
         """
@@ -77,14 +78,14 @@ def train(bandit: NArmedBandit, solver: Solver, num_plays: int) -> TrainResult:
     :param num_plays: The number of plays during this training
     :return: The result of the training
     """
-    sum_reward = 0
-    actions_selected = defaultdict(lambda: 0)
+    rewards = []
+    actions_selected = defaultdict(int)
     for i in range(num_plays):
         action, reward = solver.play(bandit)
         actions_selected[action] += 1
-        sum_reward += reward
+        rewards.append(reward)
 
-    return TrainResult(bandit, solver, actions_selected, sum_reward)
+    return TrainResult(bandit, solver, actions_selected, rewards)
 
 
 def compare_once(bandit: NArmedBandit, solvers: List[Solver], num_plays: int) -> List[Tuple[Solver, TrainResult]]:

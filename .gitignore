@@ -2,3 +2,4 @@ __pycache__
 /.idea
 /run.sh
 /log.txt
+/src/rl_testbed.egg-info/
