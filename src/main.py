@@ -4,15 +4,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 from tqdm import tqdm
 
-from base_solver import Solver
+from base_solver import Solver, GreedySolver
 from n_armed_bandit import NArmedBandit
 from solvers.epsilon_greedy_solver import EpsilonGreedySolver
 from training import train, TrainResult
-from update_rules import sample_average_update_rule
+from update_rules import sample_average_update_rule, create_weighted_average_update_rule
 
 NUM_ACTIONS = 10
-NUM_PLAYS_PER_TRAINING = 100
-NUM_TRAININGS = 20
+NUM_PLAYS_PER_TRAINING = 1000
+NUM_TRAININGS = 200
 
 
 def solver_to_results(
@@ -61,17 +61,42 @@ def main():
     bandit = NArmedBandit(NUM_ACTIONS)
 
     solver_constructors = [
+        # lambda: EpsilonGreedySolver(
+        #     name='epsilon greedy 0.01',
+        #     n=NUM_ACTIONS,
+        #     update_rule=sample_average_update_rule,
+        #     epsilon=0.01
+        # ),
+        # lambda: EpsilonGreedySolver(
+        #     name='epsilon greedy 0.1',
+        #     n=NUM_ACTIONS,
+        #     update_rule=sample_average_update_rule,
+        #     epsilon=0.1
+        # ),
         lambda: EpsilonGreedySolver(
-            name='epsilon greedy 0.01',
+            name='epsilon greedy 0.1 decay=0.005',
             n=NUM_ACTIONS,
             update_rule=sample_average_update_rule,
-            epsilon=0.01
+            epsilon=0.1,
+            epsilon_decay=0.0001
         ),
-        lambda: EpsilonGreedySolver(
-            name='epsilon greedy 0.1',
+        lambda: GreedySolver(
+            name='optimistic initial values 0.3',
             n=NUM_ACTIONS,
-            update_rule=sample_average_update_rule,
-            epsilon=0.1
+            update_rule=create_weighted_average_update_rule(0.3),
+            initial_action_value=10
+        ),
+        lambda: GreedySolver(
+            name='optimistic initial values 0.5',
+            n=NUM_ACTIONS,
+            update_rule=create_weighted_average_update_rule(0.5),
+            initial_action_value=10
+        ),
+        lambda: GreedySolver(
+            name='optimistic initial values 0.7',
+            n=NUM_ACTIONS,
+            update_rule=create_weighted_average_update_rule(0.7),
+            initial_action_value=10
         ),
     ]
 
@@ -83,9 +108,11 @@ def main():
     rewards = results_to_rewards(results)
     avg_rewards = np.mean(rewards, axis=1)
 
-    for avg_reward in avg_rewards:
-        plt.plot(avg_reward)
+    for avg_reward, solver_constructor in zip(avg_rewards, solver_constructors):
+        solver = solver_constructor()
+        plt.plot(avg_reward, label=f'{solver}')
     plt.ylabel('reward')
+    plt.legend(loc='best')
     plt.show()
 
 

@@ -17,6 +17,7 @@ def sample_average_update_rule(current_action_value: float, reward: float, numbe
 def create_weighted_average_update_rule(alpha: float) -> Callable[[float, float, int], float]:
     """
     Creates a new weighted_average_update_rule with the given alpha step size parameter
+
     :param alpha: The step size parameter of the created weighted average update rule
     :return: A weighted average update rule
     """

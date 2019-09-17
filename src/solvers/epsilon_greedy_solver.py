@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, Tuple
 import numpy as np
 
 from solvers.base_solver import ActionUpdateSolver
@@ -13,7 +13,8 @@ class EpsilonGreedySolver(ActionUpdateSolver):
             n: int,
             update_rule: Callable[[float, float, int], float],
             epsilon: float,
-            initial_action_value: float = 0.0
+            initial_action_value: float = 0.0,
+            epsilon_decay: float = 0.0
     ):
         """
         Creates a new EpsilonGreedySolver which chooses the greedy action with the probability (1 - epsilon) and
@@ -29,13 +30,16 @@ class EpsilonGreedySolver(ActionUpdateSolver):
                             - num_action_tries is the number, how often this action was tried before this play
         :param epsilon: The probability of choosing a non-greedy action
         :param initial_action_value: The value every action value should start with
+        :param epsilon_decay: The decay of epsilon to subtract from epsilon every step
         """
         super().__init__(
             name=name,
             n=n,
             update_rule=update_rule,
-            initial_action_value=initial_action_value)
+            initial_action_value=initial_action_value
+        )
         self._epsilon = epsilon
+        self._epsilon_decay = epsilon_decay
 
     def _choose_action(self) -> int:
         """
@@ -47,6 +51,18 @@ class EpsilonGreedySolver(ActionUpdateSolver):
             return self.get_random_action()
         else:
             return self.get_greedy_action()
+
+    def play(self, bandit: Playable) -> Tuple[int, float]:
+        """
+        Chooses an action and tries it on the given n armed bandit. Afterwards applies the result to the action values.
+        Does also perform epsilon decay.
+
+        :param bandit: The n armed bandit to try an action on
+        :return: A tuple (action_selected, reward)
+        """
+        result = super().play(bandit)
+        self._epsilon = max(0, self._epsilon - self._epsilon_decay)
+        return result
 
 
 def test_action_update_solver():
