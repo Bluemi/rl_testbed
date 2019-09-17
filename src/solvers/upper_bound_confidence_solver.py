@@ -35,10 +35,15 @@ class UpperBoundConfidenceSolver(ActionUpdateSolver):
         """
         Chooses an action by the upper confidence bound action selection.
 
-        :return: The action to play following the upper confidence bound action selection.
+        :return: The action to play following the upper confidence bound acti        lambda: UpperBoundConfidenceSolver(
+            name='upper confidence bound c=0.3',
+            n=NUM_ACTIONS,
+            update_rule=sample_average_update_rule,
+            confidence=0.3
+        ),on selection.
         """
         ln_t = np.log(self.get_num_plays() + 1)
-        confidence_values = self._confidence * np.sqrt(ln_t / self._number_action_tries)
+        confidence_values = self._confidence * np.sqrt(ln_t / (self._number_action_tries + 0.001))
         action = np.argmax(self._action_values + confidence_values)
         return action
 

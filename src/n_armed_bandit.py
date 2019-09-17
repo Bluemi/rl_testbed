@@ -1,3 +1,4 @@
+import time
 from abc import ABC
 
 import numpy as np
@@ -19,13 +20,18 @@ class NArmedBandit(Playable):
     A stationary n armed bandit, with n levels. Each level has a stationary mean reward, that is initially chooses from
     a standardised normal distribution.
     """
-    def __init__(self, n: int):
+    def __init__(self, n: int, seed: int = None):
         """
         Creates a new n armed bandit.
 
         :param n: The number of levels of this bandit
+        :param seed: The seed to initialize the random values
         """
+        if seed is not None:
+            np.random.seed(seed)
         self._mean_rewards = np.random.normal(0, 1, n)
+        if seed is not None:
+            np.random.seed(int(time.time()*1000) % (2**32-1))
 
     def get_mean_rewards(self) -> np.ndarray:
         """
@@ -49,6 +55,12 @@ class NArmedBandit(Playable):
         :return: The action index with the highest mean reward
         """
         return int(np.argmax(self._mean_rewards))
+
+    def get_optimal_value(self) -> float:
+        """
+        :return: The value of the optimal action
+        """
+        return float(np.max(self._mean_rewards))
 
     def get_number_of_actions(self) -> int:
         return self._mean_rewards.shape[0]

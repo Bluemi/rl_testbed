@@ -1,3 +1,5 @@
+from functools import partial
+from multiprocessing.pool import ThreadPool, Pool
 from typing import Callable, List
 
 import matplotlib.pyplot as plt
@@ -5,15 +7,15 @@ import numpy as np
 from tqdm import tqdm
 
 from base_solver import Solver, GreedySolver
-from n_armed_bandit import NArmedBandit
 from solvers.epsilon_greedy_solver import EpsilonGreedySolver
+from upper_bound_confidence_solver import UpperBoundConfidenceSolver
+from n_armed_bandit import NArmedBandit
 from training import train, TrainResult
 from update_rules import sample_average_update_rule, create_weighted_average_update_rule
-from upper_bound_confidence_solver import UpperBoundConfidenceSolver
 
 NUM_ACTIONS = 10
-NUM_PLAYS_PER_TRAINING = 1000
-NUM_TRAININGS = 200
+NUM_PLAYS_PER_TRAINING = 5000
+NUM_TRAININGS = 2000
 
 
 def solver_to_results(
@@ -25,7 +27,7 @@ def solver_to_results(
     Takes a solver constructor and trains it NUM_TRAININGS times on the given bandit.
 
     :param solver_constructor: A callable that creates a solver
-    :param bandit: An NArmedBandit
+    :param bandit: The bandit to train on
     :param num_trainings: Specifies how often the solver is trained on the bandit
     :return: The results of the training
     """
@@ -59,57 +61,45 @@ def results_to_rewards(results: List[List[TrainResult]]) -> np.ndarray:
 
 
 def main():
-    bandit = NArmedBandit(NUM_ACTIONS)
+    bandit = NArmedBandit(NUM_ACTIONS, seed=42)
 
     solver_constructors = [
-        # lambda: EpsilonGreedySolver(
-        #     name='epsilon greedy 0.01',
-        #     n=NUM_ACTIONS,
-        #     update_rule=sample_average_update_rule,
-        #     epsilon=0.01
-        # ),
+        lambda: EpsilonGreedySolver(
+            name='epsilon greedy 0.01',
+            n=NUM_ACTIONS,
+            update_rule=sample_average_update_rule,
+            epsilon=0.01
+        ),
         # lambda: EpsilonGreedySolver(
         #     name='epsilon greedy 0.1',
         #     n=NUM_ACTIONS,
         #     update_rule=sample_average_update_rule,
         #     epsilon=0.1
         # ),
-        lambda: EpsilonGreedySolver(
-            name='epsilon greedy 0.1 decay=0.005',
-            n=NUM_ACTIONS,
-            update_rule=sample_average_update_rule,
-            epsilon=0.1,
-            epsilon_decay=0.0001
-        ),
+        # lambda: EpsilonGreedySolver(
+        #     name='epsilon greedy 0.1 with decay 5e-5',
+        #     n=NUM_ACTIONS,
+        #     update_rule=sample_average_update_rule,
+        #     epsilon=0.1,
+        #     epsilon_decay=5e-5
+        # ),
         lambda: GreedySolver(
-            name='optimistic initial values 0.3',
+            name='optimistic initial values',
             n=NUM_ACTIONS,
             update_rule=create_weighted_average_update_rule(0.3),
-            initial_action_value=10
+            initial_action_value=10,
         ),
         lambda: UpperBoundConfidenceSolver(
-            name='confidence 0.5',
+            name='upper confidence bound c=1',
             n=NUM_ACTIONS,
             update_rule=sample_average_update_rule,
-            confidence=0.5
-        ),
-        lambda: UpperBoundConfidenceSolver(
-            name='confidence 0.7',
-            n=NUM_ACTIONS,
-            update_rule=sample_average_update_rule,
-            confidence=0.7
-        ),
-        lambda: UpperBoundConfidenceSolver(
-            name='confidence 0.3',
-            n=NUM_ACTIONS,
-            update_rule=sample_average_update_rule,
-            confidence=0.3
+            confidence=1
         ),
     ]
 
     results: List[List[TrainResult]] = []
     for solver_constructor in solver_constructors:
-        result = solver_to_results(solver_constructor, bandit, NUM_TRAININGS)
+        result = solver_to_results(solver_constructor, bandit=bandit, num_trainings=NUM_TRAININGS)
         results.append(result)
 
     rewards = results_to_rewards(results)
@@ -117,7 +107,8 @@ def main():
 
     for avg_reward, solver_constructor in zip(avg_rewards, solver_constructors):
         solver = solver_constructor()
-        plt.plot(avg_reward, label=f'{solver}')
+        plt.plot(avg_reward, label=f'{solver}', alpha=0.7)
+    plt.plot([bandit.get_optimal_value()]*NUM_PLAYS_PER_TRAINING, label='optimal value', color='black', linestyle='--')
     plt.ylabel('reward')
     plt.legend(loc='best')
     plt.show()
