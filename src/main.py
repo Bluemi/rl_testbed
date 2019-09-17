@@ -9,6 +9,7 @@ from n_armed_bandit import NArmedBandit
 from solvers.epsilon_greedy_solver import EpsilonGreedySolver
 from training import train, TrainResult
 from update_rules import sample_average_update_rule, create_weighted_average_update_rule
+from upper_bound_confidence_solver import UpperBoundConfidenceSolver
 
 NUM_ACTIONS = 10
 NUM_PLAYS_PER_TRAINING = 1000
@@ -86,17 +87,23 @@ def main():
             update_rule=create_weighted_average_update_rule(0.3),
             initial_action_value=10
         ),
-        lambda: GreedySolver(
-            name='optimistic initial values 0.5',
+        lambda: UpperBoundConfidenceSolver(
+            name='confidence 0.5',
             n=NUM_ACTIONS,
-            update_rule=create_weighted_average_update_rule(0.5),
-            initial_action_value=10
+            update_rule=sample_average_update_rule,
+            confidence=0.5
         ),
-        lambda: GreedySolver(
-            name='optimistic initial values 0.7',
+        lambda: UpperBoundConfidenceSolver(
+            name='confidence 0.7',
             n=NUM_ACTIONS,
-            update_rule=create_weighted_average_update_rule(0.7),
-            initial_action_value=10
+            update_rule=sample_average_update_rule,
+            confidence=0.7
+        ),
+        lambda: UpperBoundConfidenceSolver(
+            name='confidence 0.3',
+            n=NUM_ACTIONS,
+            update_rule=sample_average_update_rule,
+            confidence=0.3
         ),
     ]
 

@@ -115,6 +115,14 @@ class ActionUpdateSolver(Solver, ABC):
         self._number_action_tries[action] += 1
         return action, reward
 
+    def get_num_plays(self) -> int:
+        """
+        Returns the total amount of plays.
+
+        :return: The number of total plays of this solver
+        """
+        return int(np.sum(self._number_action_tries))
+
     def _apply_action_reward(self, action_chosen, reward):
         """
         Applies the given reward for the action, that was chosen with the given update_rule.
