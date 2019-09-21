@@ -3,3 +3,4 @@ __pycache__
 /run.sh
 /log.txt
 /src/rl_testbed.egg-info/
+*.dat

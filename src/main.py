@@ -105,12 +105,19 @@ def main():
     rewards = results_to_rewards(results)
     avg_rewards = np.mean(rewards, axis=1)
 
+    print(f'optimal value: {bandit.get_optimal_value()}')
+    print(f'mean values: {np.mean(avg_rewards, axis=1)}')
+
+    avg_rewards.dump('experiment2.dat')
+
     for avg_reward, solver_constructor in zip(avg_rewards, solver_constructors):
         solver = solver_constructor()
         plt.plot(avg_reward, label=f'{solver}', alpha=0.7)
     plt.plot([bandit.get_optimal_value()]*NUM_PLAYS_PER_TRAINING, label='optimal value', color='black', linestyle='--')
+    plt.axis((0, 5010, 0.0, 1.8))
     plt.ylabel('reward')
     plt.legend(loc='best')
+    plt.axhline(0, color='black')
     plt.show()
 
 
